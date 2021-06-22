@@ -2,5 +2,25 @@
   "sheetId": "",
   "discordToken": "",
   "clientID": "",
-  "clientSecret": ""
+  "clientSecret": "",
+  "sheetName": "",
+  "InformationRowStart": "",
+  "userIDsColumn": "",
+  "roles": [
+    {
+      "roleColumn": "",
+      "roleID": ""
+    },
+    {
+      "roleColumn": "",
+      "roleID": ""
+    },
+    {
+      "roleColumn": "",
+      "roleID": ""
+    }
+  ],
+  "roleConfirmationPhrase": "",
+  "guildID": "",
+  "loggingChannel": ""
 }
