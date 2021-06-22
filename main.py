@@ -2,13 +2,14 @@ from __future__ import print_function
 
 import json
 import os.path
+import pandas as pd
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 
-class SheetReader():
+class SheetReader:
     scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
     token_path = "token.json"
     credentials_path = "credentials.json"
@@ -49,12 +50,19 @@ class SheetReader():
 
     def read_spreadsheet(self):
         sheetId = self.config.get("sheetId")
-        range = "Access"
-        result = self.sheet.values().get(spreadsheetId=sheetId, range=range).execute()
-        values = result.get('values', [])
-        return values
-
-sr = SheetReader()
-r = sr.read_spreadsheet()
-
-
+        sheet = self.config.get("sheetName")
+        userIDColumn = self.config.get("userIDsColumn")
+        roleColumns = [role.get("roleColumn") for role in self.config.get("roles")]
+        roleIDs = [role.get("roleID") for role in self.config.get("roles")]
+        informationRow = self.config.get("InformationRowStart")
+        cols = [userIDColumn]+roleColumns
+        pdCols = ["userID"]+roleIDs
+        data = pd.DataFrame(columns=pdCols)
+        for c, i in zip(cols, range(len(cols))):
+            r = f"{sheet}!{c}{informationRow}:{c}"
+            result = self.sheet.values().get(spreadsheetId=sheetId,
+                                             range=r).execute()
+            values = result.get('values', [])
+            data.loc[:, pdCols[i]] = [v[0] for v in values]
+        data.loc[:, roleIDs] = data.loc[:, roleIDs] == self.config.get("roleConfirmationPhrase")
+        return data
