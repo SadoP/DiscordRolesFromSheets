@@ -19,9 +19,9 @@ class SheetReader:
     config = {}
 
     def __init__(self):
+        self.config = self.get_config()
         self.creds = self.get_creds()
         self.sheet = self.get_service().spreadsheets()
-        self.config = self.get_config()
 
     # Adapted from google's documentations:
     # https://developers.google.com/sheets/api/quickstart/python
