@@ -65,4 +65,6 @@ class SheetReader:
             values = result.get('values', [])
             data.loc[:, pdCols[i]] = [v[0] for v in values]
         data.loc[:, roleIDs] = data.loc[:, roleIDs] == self.config.get("roleConfirmationPhrase")
+        data.index = data.loc[:, "userID"]
+        data = data.drop("userID", axis=1)
         return data
