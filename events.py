@@ -76,7 +76,7 @@ class Events(commands.Cog):
             if not m:
                 continue
             for role in m.roles:
-                data.loc[m.id, str(role.id)] = True
+                data.loc[str(m.id), str(role.id)] = True
         data = data.fillna(False)
         return data
 
