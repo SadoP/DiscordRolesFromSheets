@@ -1,4 +1,6 @@
 from itertools import product
+
+import numpy as np
 import pandas as pd
 from discord.ext import commands, tasks
 
@@ -52,15 +54,20 @@ class Events(commands.Cog):
     async def update_roles(self):
         print("updating")
         dataSheet = self.sr.read_spreadsheet()
-        users = dataSheet.index
-        dataDiscord = await self.user_list_and_roles(users)
+        dataDiscord = await self.user_list_and_roles()
         rolesAssign, rolesRemove = self.compare_roles(dataSheet, dataDiscord)
         roles = rolesAssign.columns
         users = rolesAssign.index
-
         for user, role in product(users, roles):
-            rolename = self.guild.get_role(int(role)).name
-            membername = self.guild.get_member(int(user)).name
+            drole = self.guild.get_role(int(role))
+            member = self.guild.get_member(int(user))
+            if not drole:
+                continue
+            if not member:
+                continue
+            rolename = drole.name
+            membername = member.name
+
             if rolesAssign.loc[user, role]:
                 await self.log("assigning {} to {}".format(rolename, membername))
                 await self.assign_role(user, role)
@@ -68,27 +75,33 @@ class Events(commands.Cog):
                 await self.log("removing {} from {}".format(rolename, membername))
                 await self.remove_role(user, role)
 
-    async def user_list_and_roles(self, members: []):
-        roles = [str(role.id) for role in self.guild.roles]
+    async def user_list_and_roles(self):
+        roles = [role.get("roleID") for role in self.sr.config.get("roles")]
         data = pd.DataFrame(columns=roles)
-        for member in members:
-            m = self.guild.get_member(int(member))
-            if not m:
-                continue
-            for role in m.roles:
-                data.loc[str(m.id), str(role.id)] = True
-        data = data.fillna(False)
+        for r in roles:
+            role = self.guild.get_role(int(r))
+            for m in role.members:
+                data.loc[str(m.id), r] = True
+            data = data.fillna(False)
         return data
 
     def compare_roles(self, dataSheet: pd.DataFrame, dataDiscord: pd.DataFrame):
-        sameUsers = dataSheet.index.intersection(dataDiscord.index)
-        sameRoles = dataSheet.columns.intersection(dataDiscord.columns)
-        dataSheet = dataSheet.loc[sameUsers, sameRoles]
-        dataDiscord = dataDiscord.loc[sameUsers, sameRoles]
-        rolesAssign = pd.DataFrame(index=sameUsers, columns=sameRoles)
-        rolesRemove = pd.DataFrame(index=sameUsers, columns=sameRoles)
-        rolesAssign.loc[sameUsers, sameRoles] = (dataSheet.values & dataDiscord.values.__invert__())
-        rolesRemove.loc[sameUsers, sameRoles] = (dataDiscord.values & dataSheet.values.__invert__())
+        users = dataSheet.index.union(dataDiscord.index)
+        roles = dataSheet.columns
+        rolesAssign = pd.DataFrame(np.zeros((len(users), len(roles)), dtype=bool),
+                                   index=users, columns=roles)
+        rolesRemove = pd.DataFrame(np.zeros((len(users), len(roles)), dtype=bool),
+                                   index=users, columns=roles)
+        for user, role in product(users, roles):
+            hasRole = True
+            shallRole = False
+            try:
+                hasRole = dataDiscord.loc[user, role]
+                shallRole = dataSheet.loc[user, role]
+            except KeyError:
+                pass
+            rolesAssign.loc[user, role] = (not hasRole) & shallRole
+            rolesRemove.loc[user, role] = hasRole & (not shallRole)
         return rolesAssign, rolesRemove
 
     async def assign_role(self, userID, roleID):
