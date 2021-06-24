@@ -93,10 +93,13 @@ class Events(commands.Cog):
         rolesRemove = pd.DataFrame(np.zeros((len(users), len(roles)), dtype=bool),
                                    index=users, columns=roles)
         for user, role in product(users, roles):
-            hasRole = True
+            hasRole = False
             shallRole = False
             try:
                 hasRole = dataDiscord.loc[user, role]
+            except KeyError:
+                pass
+            try:
                 shallRole = dataSheet.loc[user, role]
             except KeyError:
                 pass
