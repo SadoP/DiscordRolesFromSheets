@@ -20,19 +20,17 @@ class SheetReader:
 
     def __init__(self):
         self.config = self.get_config()
-        self.creds = self.get_creds()
+        self.get_creds()
         self.sheet = self.get_service().spreadsheets()
 
     # Adapted from google's documentations:
     # https://developers.google.com/sheets/api/quickstart/python
     def get_creds(self):
-        creds = None
         if os.path.exists(self.token_path):
-            creds = Credentials.from_authorized_user_file(self.token_path, self.scopes)
-            return creds
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+            self.creds = Credentials.from_authorized_user_file(self.token_path, self.scopes)
+        if not self.creds or not self.creds.valid:
+            if self.creds and self.creds.expired and self.creds.refresh_token:
+                self.creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, self.scopes)
                 creds = flow.run_local_server(port=0)
@@ -49,6 +47,7 @@ class SheetReader:
                 return json.loads(config.read())
 
     def read_spreadsheet(self):
+        self.get_creds()
         sheetId = self.config.get("sheetId")
         sheet = self.config.get("sheetName")
         userIDColumn = self.config.get("userIDsColumn")
