@@ -56,7 +56,7 @@ class Events(commands.Cog):
         dataSheet = self.sr.read_spreadsheet()
         dataDiscord = await self.user_list_and_roles()
         try:
-            rolesAssign, rolesRemove = self.compare_roles(dataSheet, dataDiscord)
+            rolesAssign, rolesRemove = await self.compare_roles(dataSheet, dataDiscord)
         except ValueError:
             return
         roles = rolesAssign.columns
@@ -88,7 +88,7 @@ class Events(commands.Cog):
             data = data.fillna(False)
         return data
 
-    def compare_roles(self, dataSheet: pd.DataFrame, dataDiscord: pd.DataFrame):
+    async def compare_roles(self, dataSheet: pd.DataFrame, dataDiscord: pd.DataFrame):
         users = dataSheet.index.union(dataDiscord.index)
         roles = dataSheet.columns
         rolesAssign = pd.DataFrame(np.zeros((len(users), len(roles)), dtype=bool),
