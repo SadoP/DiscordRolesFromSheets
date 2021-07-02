@@ -109,7 +109,8 @@ class Events(commands.Cog):
             try:
                 rolesAssign.loc[user, role] = (not hasRole) & shallRole
                 rolesRemove.loc[user, role] = hasRole & (not shallRole)
-            except ValueError:
+            except ValueError as v:
+                print(v)
                 await self.log("There was an error comparing the roles for at least one user. "
                                "Please check the sheet for duplicate entries. To preserve "
                                "integrity, no updates will be performed")
@@ -127,6 +128,7 @@ class Events(commands.Cog):
         await member.remove_roles(role)
 
     async def log(self, message):
+        print(message)
         await self.logchannel.send(message)
 
 
