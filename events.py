@@ -110,9 +110,9 @@ class Events(commands.Cog):
                 rolesAssign.loc[user, role] = (not hasRole) & shallRole
                 rolesRemove.loc[user, role] = hasRole & (not shallRole)
             except ValueError:
-                self.log("There was an error comparing the roles for at least one user. Please "
-                         "check the sheet for duplicate entries. To preserve integrity, "
-                         "no updates will be performed")
+                await self.log("There was an error comparing the roles for at least one user. "
+                               "Please check the sheet for duplicate entries. To preserve "
+                               "integrity, no updates will be performed")
                 raise
         return rolesAssign, rolesRemove
 
