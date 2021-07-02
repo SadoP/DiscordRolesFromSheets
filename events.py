@@ -55,7 +55,10 @@ class Events(commands.Cog):
         print("updating")
         dataSheet = self.sr.read_spreadsheet()
         dataDiscord = await self.user_list_and_roles()
-        rolesAssign, rolesRemove = self.compare_roles(dataSheet, dataDiscord)
+        try:
+            rolesAssign, rolesRemove = self.compare_roles(dataSheet, dataDiscord)
+        except ValueError:
+            return
         roles = rolesAssign.columns
         users = rolesAssign.index
         for user, role in product(users, roles):
@@ -103,8 +106,14 @@ class Events(commands.Cog):
                 shallRole = dataSheet.loc[user, role]
             except KeyError:
                 pass
-            rolesAssign.loc[user, role] = (not hasRole) & shallRole
-            rolesRemove.loc[user, role] = hasRole & (not shallRole)
+            try:
+                rolesAssign.loc[user, role] = (not hasRole) & shallRole
+                rolesRemove.loc[user, role] = hasRole & (not shallRole)
+            except ValueError:
+                self.log("There was an error comparing the roles for at least one user. Please "
+                         "check the sheet for duplicate entries. To preserve integrity, "
+                         "no updates will be performed")
+                raise
         return rolesAssign, rolesRemove
 
     async def assign_role(self, userID, roleID):
