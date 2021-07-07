@@ -54,6 +54,9 @@ class Events(commands.Cog):
     async def update_roles(self):
         logger.info("updating")
         dataSheet = self.sr.read_spreadsheet()
+        if dataSheet is None:
+            await self.log("No data returned from sheet. Please check logs for more information")
+            return
         dataDiscord = await self.user_list_and_roles()
         try:
             rolesAssign, rolesRemove = await self.compare_roles(dataSheet, dataDiscord)

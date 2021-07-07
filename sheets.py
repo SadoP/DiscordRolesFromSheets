@@ -2,11 +2,14 @@ from __future__ import print_function
 
 import json
 import os.path
+import traceback
+
 import pandas as pd
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from logger import logger
 
 
 class SheetReader:
@@ -59,8 +62,12 @@ class SheetReader:
         data = pd.DataFrame(columns=pdCols)
         for c, i in zip(cols, range(len(cols))):
             r = f"{sheet}!{c}{informationRow}:{c}"
-            result = self.sheet.values().get(spreadsheetId=sheetId,
-                                             range=r).execute()
+            try:
+                result = self.sheet.values().get(spreadsheetId=sheetId, range=r).execute()
+            except Exception as e:
+                logger.error(traceback.format_exc())
+                logger.error("error upon requesting data", e)
+                return
             values = result.get('values', [])
             data.loc[:, pdCols[i]] = [v[0] for v in values]
         data.loc[:, roleIDs] = data.loc[:, roleIDs] == self.config.get("roleConfirmationPhrase")
