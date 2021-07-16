@@ -44,6 +44,11 @@ class Events(commands.Cog):
         print("{} joined the server".format(member.name))
         await self.update_roles()
 
+    @commands.command()
+    async def ping(self, message):
+        if str(message.channel.id) == self.sr.config.get("loggingChannel"):
+            await message.channel.send("pong")
+
     def cog_unload(self):
         self.updater.cancel()
 
