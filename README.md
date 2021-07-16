@@ -35,7 +35,7 @@ Once you have done this, place the `credentials.json` in the same folder as the 
 - Invite the bot to your Discord. 
 - Start the bot:
  ```bash
- python bot.py
+ python start.py
  ```
 - Copy the link to your browser and follow the instructions to authorize access to your spreadsheet.
   This has to be done only the first time you start the bot, but the bot has to be restarted the first time after authorization has been granted.

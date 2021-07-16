@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 import pandas as pd
 from discord.ext import commands, tasks
-
+from logger import logger
 from sheets import SheetReader
 
 
@@ -36,12 +36,12 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Bot logged in as {}".format(self.bot.user.name))
+        logger.info("Bot logged in as {}".format(self.bot.user.name))
         self.setup()
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        print("{} joined the server".format(member.name))
+        logger.info("{} joined the server".format(member.name))
         await self.update_roles()
 
     @commands.command()
@@ -57,8 +57,11 @@ class Events(commands.Cog):
         await self.update_roles()
 
     async def update_roles(self):
-        print("updating")
+        logger.info("updating")
         dataSheet = self.sr.read_spreadsheet()
+        if dataSheet is None:
+            await self.log("No data returned from sheet. Please check logs for more information")
+            return
         dataDiscord = await self.user_list_and_roles()
         try:
             rolesAssign, rolesRemove = await self.compare_roles(dataSheet, dataDiscord)
@@ -115,7 +118,7 @@ class Events(commands.Cog):
                 rolesAssign.loc[user, role] = (not hasRole) & shallRole
                 rolesRemove.loc[user, role] = hasRole & (not shallRole)
             except ValueError as v:
-                print(v)
+                logger.info(v)
                 await self.log("There was an error comparing the roles for at least one user. "
                                "Please check the sheet for duplicate entries. To preserve "
                                "integrity, no updates will be performed")
@@ -133,7 +136,7 @@ class Events(commands.Cog):
         await member.remove_roles(role)
 
     async def log(self, message):
-        print(message)
+        logger.info(message)
         await self.logchannel.send(message)
 
 

@@ -2,12 +2,15 @@ from __future__ import print_function
 
 import json
 import os.path
+import traceback
+
 import pandas as pd
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-
+from logger import logger
+LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 class SheetReader:
     scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -47,22 +50,33 @@ class SheetReader:
                 return json.loads(config.read())
 
     def read_spreadsheet(self):
+        def excel_style(col):
+            # https://stackoverflow.com/a/19169180
+            result = []
+            while col:
+                col, rem = divmod(col - 1, 26)
+                result[:0] = LETTERS[rem]
+            return ''.join(result)
         self.get_creds()
         sheetId = self.config.get("sheetId")
         sheet = self.config.get("sheetName")
         userIDColumn = self.config.get("userIDsColumn")
         roleColumns = [role.get("roleColumn") for role in self.config.get("roles")]
         roleIDs = [role.get("roleID") for role in self.config.get("roles")]
-        informationRow = self.config.get("InformationRowStart")
+        informationRow = int(self.config.get("InformationRowStart"))
         cols = [userIDColumn]+roleColumns
         pdCols = ["userID"]+roleIDs
-        data = pd.DataFrame(columns=pdCols)
-        for c, i in zip(cols, range(len(cols))):
-            r = f"{sheet}!{c}{informationRow}:{c}"
-            result = self.sheet.values().get(spreadsheetId=sheetId,
-                                             range=r).execute()
-            values = result.get('values', [])
-            data.loc[:, pdCols[i]] = [v[0] for v in values]
+        try:
+            result = self.sheet.values().get(spreadsheetId=sheetId, range=sheet).execute()
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error("error upon requesting data", e)
+            return
+        data = pd.DataFrame(result.get("values")[1:], columns=result.get("values")[0])
+        columns = [excel_style(i+1) for i in range(len(data.columns))]
+        data.columns = columns
+        data = data.iloc[informationRow-2:].loc[:, cols]
+        data.columns = pdCols
         data.loc[:, roleIDs] = data.loc[:, roleIDs] == self.config.get("roleConfirmationPhrase")
         data.index = data.loc[:, "userID"]
         data = data.drop("userID", axis=1)
