@@ -10,14 +10,12 @@ git clone git@github.com:SadoP/DiscordRolesFromSheets.git
 conda conda env create -f environment.yml
 conda activte DRFS
 ```
-- Follow this guideline to obtain Credentials for a Desktop Application for your Bot:
-https://developers.google.com/workspace/guides/create-credentials
-Once you have done this, place the `credentials.json` in the same folder as the bot.
+- Follow this guideline to create a Service Account for your Bot:
+https://developers.google.com/identity/protocols/oauth2/service-account
+Give this serivce account access to your spreadsheet, download the file holding the credentials, name it "service_account.json" and place it in the same folder as the bot.
 - Copy or move `config.json.default` to `config.json` and fill in all the information in the `config.json`. The bot does not have any default values, if a field is left blank, it will break.
     - sheetId: The id of the spreadsheet
     - discordToken: The token used to login to your discord Bot
-    - clientID: The client ID of your google Application
-    - clientSecret: The accompanying secret
     - sheetName: Name of the sheet within the spreadsheet
     - InformationRowStart: The first row that is not a header.
       This counts the same way as the sheet, ie the first row is 1 not 0
