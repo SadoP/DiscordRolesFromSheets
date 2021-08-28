@@ -60,11 +60,11 @@ class SheetReader:
         pdCols = ["userID"] + roleIDs
         try:
             result = self.sheet.values().get(spreadsheetId=sheetId, range=sheet).execute()
+            data = pd.DataFrame(result.get("values")[1:], columns=result.get("values")[0])
         except Exception as e:
             logger.error(traceback.format_exc())
             logger.error("error upon requesting data", e)
             return
-        data = pd.DataFrame(result.get("values")[1:], columns=result.get("values")[0])
         columns = [excel_style(i + 1) for i in range(len(data.columns))]
         data.columns = columns
         data = data.iloc[informationRow - 2:].loc[:, cols]
