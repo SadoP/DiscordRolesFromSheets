@@ -71,7 +71,11 @@ class Events(commands.Cog):
         users = rolesAssign.index
         for user, role in product(users, roles):
             drole = self.guild.get_role(int(role))
-            member = self.guild.get_member(int(user))
+            try:
+                member = self.guild.get_member(int(user))
+            except ValueError:
+                logger.error("invalid user literal")
+                continue
             if not drole:
                 continue
             if not member:
